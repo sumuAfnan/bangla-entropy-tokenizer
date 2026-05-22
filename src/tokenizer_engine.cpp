@@ -70,7 +70,7 @@ public:
         }
         file.close();
 
-        std::cout << "[Step 2] Scoring tokens with True UTF-8 Character Length Penalty..." << std::endl;
+        std::cout << "[Step 2] Scoring tokens with Greedy Length Bonus..." << std::endl;
         std::unordered_map<std::string, double> vocab_loss;
         
         using TokenPair = std::pair<double, std::string>;
@@ -84,16 +84,20 @@ public:
             double score = entropy;
             
             if (token.rfind("_", 0) == 0) { 
-                if (char_len > 25) {        
-                    score += 15.0; 
-                } else if (char_len > 2) {  
-                    score -= 6.0; 
+                if (char_len >= 4 && char_len <= 15) {        
+                    score -= 18.0; 
+                } else if (char_len > 15) {
+                    score += 5.0; 
+                } else {
+                    score -= 2.0; 
                 }
             } else {                        
-                if (char_len <= 5) {        
-                    score -= 8.0; 
+                if (token == "গুলো" || token == "দের" || token == "রা" || token == "টি") {
+                    score -= 12.0; 
+                } else if (char_len <= 3) {
+                    score -= 4.0;  
                 } else {
-                    score += 12.0; 
+                    score += 25.0; 
                 }
             }
 
