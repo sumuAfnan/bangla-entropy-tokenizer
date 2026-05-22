@@ -6,6 +6,7 @@
 #include <cmath>
 #include <unordered_map>
 #include <queue> 
+#include <algorithm>
 #include "../include/trie.h"
 
 class TokenizerEngine {
@@ -37,7 +38,7 @@ public:
         }
 
         std::string word;
-        std::cout << "[Step 1] Processing UTF-8 safe substrings..." << std::endl;
+        std::cout << "[Step 1] Processing UTF-8 safe substrings (Max len 24 - Pure Data Driven)..." << std::endl;
         
         while (file >> word) {
             std::string fixed_word = "_" + word;
@@ -45,8 +46,9 @@ public:
             
             for (size_t i = 0; i < utf8_chars.size(); ++i) {
                 std::string sub = "";
-                for (size_t len = 1; len <= 6 && i + len <= utf8_chars.size(); ++len) {
+                for (size_t len = 1; len <= 24 && i + len <= utf8_chars.size(); ++len) {
                     sub += utf8_chars[i + len - 1]; 
+                    
                     main_trie.insert(sub);
                     vocab_counts[sub]++;
                     total_token_count++;
