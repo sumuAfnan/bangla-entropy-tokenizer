@@ -45,15 +45,17 @@ class BanglaTokenizer:
             fixed_word = "_" + word
             i = 0
             while i < len(fixed_word):
-                match_found = False
-                for length in range(min(24, len(fixed_word) - i), 0, -1):
+                best_match = ""
+                for length in range(1, min(24, len(fixed_word) - i) + 1):
                     sub = fixed_word[i:i+length]
                     if sub in self.vocab:
-                        final_tokens.append(sub)
-                        i += length
-                        match_found = True
-                        break
-                if not match_found:
+                        if len(sub) > len(best_match):
+                            best_match = sub
+                
+                if best_match:
+                    final_tokens.append(best_match)
+                    i += len(best_match)
+                else:
                     final_tokens.append(fixed_word[i])
                     i += 1
         return final_tokens
