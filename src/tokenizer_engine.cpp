@@ -70,7 +70,7 @@ public:
         }
         file.close();
 
-        std::cout << "[Step 2] Scoring tokens with Greedy Length Bonus..." << std::endl;
+        std::cout << "[Step 2] Scoring tokens with Pure Mathematical Scaling..." << std::endl;
         std::unordered_map<std::string, double> vocab_loss;
         
         using TokenPair = std::pair<double, std::string>;
@@ -92,12 +92,10 @@ public:
                     score -= 2.0; 
                 }
             } else {                        
-                if (token == "গুলো" || token == "দের" || token == "রা" || token == "টি") {
-                    score -= 12.0; 
-                } else if (char_len <= 3) {
-                    score -= 4.0;  
+                if (char_len <= 3) {
+                    score -= 8.0;  
                 } else {
-                    score += 25.0; 
+                    score += 15.0; 
                 }
             }
 
