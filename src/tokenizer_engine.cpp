@@ -84,16 +84,16 @@ public:
             double score = entropy;
             
             if (token.rfind("_", 0) == 0) { 
-                if (char_len > 10) {        
-                    score += 10.0; 
-                } else if (char_len > 3) {  
-                    score -= 4.0; 
+                if (char_len > 25) {        
+                    score += 15.0; 
+                } else if (char_len > 2) {  
+                    score -= 6.0; 
                 }
             } else {                        
-                if (char_len <= 4) {        
-                    score -= 3.0; 
+                if (char_len <= 5) {        
+                    score -= 8.0; 
                 } else {
-                    score += 8.0; 
+                    score += 12.0; 
                 }
             }
 
