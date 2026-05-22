@@ -85,15 +85,15 @@ public:
             
             if (token.rfind("_", 0) == 0) { 
                 if (char_len > 10) {        
-                    score += 5.0;
+                    score += 10.0; 
                 } else if (char_len > 3) {  
-                    score -= 2.5;           
+                    score -= 4.0; 
                 }
             } else {                        
                 if (char_len <= 4) {        
-                    score -= 2.0;           
+                    score -= 3.0; 
                 } else {
-                    score += 4.0;           
+                    score += 8.0; 
                 }
             }
 
