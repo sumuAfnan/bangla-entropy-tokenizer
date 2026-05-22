@@ -38,7 +38,7 @@ public:
         }
 
         std::string word;
-        std::cout << "[Step 1] Processing UTF-8 safe substrings (Max len 24 - Pure Data Driven)..." << std::endl;
+        std::cout << "[Step 1] Collecting candidate tokens for LLM-focused segmentation..." << std::endl;
         
         while (file >> word) {
             std::string fixed_word = "_" + word;
@@ -47,7 +47,7 @@ public:
             for (size_t i = 0; i < utf8_chars.size(); ++i) {
                 std::string sub = "";
                 for (size_t len = 1; len <= 24 && i + len <= utf8_chars.size(); ++len) {
-                    sub += utf8_chars[i + len - 1]; 
+                    sub += utf8_chars[i + len - 1];
                     
                     main_trie.insert(sub);
                     vocab_counts[sub]++;
@@ -57,7 +57,7 @@ public:
         }
         file.close();
 
-        std::cout << "[Step 2] Calculating probabilities and loss values..." << std::endl;
+        std::cout << "[Step 2] Scoring tokens with Information Gain & Length Penalty..." << std::endl;
         std::unordered_map<std::string, double> vocab_loss;
         
         using TokenPair = std::pair<double, std::string>;
@@ -65,15 +65,29 @@ public:
 
         for (auto& [token, count] : vocab_counts) {
             double probability = (double)count / total_token_count;
-            double loss_score = -std::log2(probability);
+            double entropy = -std::log2(probability);
             
-            vocab_loss[token] = loss_score;
-            main_trie.set_loss(token, loss_score);
-            
-            pq.push({loss_score, token}); 
+            double score = entropy;
+            if (token.rfind("_", 0) == 0) {
+                if (token.length() > 15) {
+                    score += 4.0;
+                } else if (token.length() > 6) {
+                    score -= 1.5;
+                }
+            } else {
+                if (token.length() <= 6) {
+                    score -= 2.0;
+                } else {
+                    score += 3.0;
+                }
+            }
+
+            vocab_loss[token] = score;
+            main_trie.set_loss(token, score);
+            pq.push({score, token}); 
         }
 
-        std::cout << "[Step 3] Pruning vocabulary using optimized Priority Queue..." << std::endl;
+        std::cout << "[Step 3] Pruning vocabulary for optimal LLM token boundary..." << std::endl;
         
         while (vocab_counts.size() > (size_t)vocab_size && !pq.empty()) {
             TokenPair top_node = pq.top();
@@ -86,7 +100,7 @@ public:
             }
         }
 
-        std::cout << "[Step 4] Training complete. Saving final " << vocab_size << " tokens." << std::endl;
+        std::cout << "[Step 4] Training complete. Saved final " << vocab_size << " LLM tokens." << std::endl;
         save_to_json(vocab_counts);
     }
 
