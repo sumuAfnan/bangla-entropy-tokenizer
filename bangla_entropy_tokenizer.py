@@ -46,7 +46,7 @@ class BanglaTokenizer:
             i = 0
             while i < len(fixed_word):
                 match_found = False
-                for length in range(min(6, len(fixed_word) - i), 0, -1):
+                for length in range(min(24, len(fixed_word) - i), 0, -1):
                     sub = fixed_word[i:i+length]
                     if sub in self.vocab:
                         final_tokens.append(sub)
