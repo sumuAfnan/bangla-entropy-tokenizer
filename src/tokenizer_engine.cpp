@@ -29,6 +29,19 @@ private:
         return chars;
     }
 
+    size_t get_utf8_char_count(const std::string& str) {
+        size_t count = 0;
+        for (size_t i = 0; i < str.length();) {
+            unsigned char c = str[i];
+            if (c >= 0xf0) i += 4;
+            else if (c >= 0xe0) i += 3;
+            else if (c >= 0xc0) i += 2;
+            else i += 1;
+            count++;
+        }
+        return count;
+    }
+
 public:
     void train_from_file(const std::string& file_path, int vocab_size) {
         std::ifstream file(file_path);
@@ -38,7 +51,7 @@ public:
         }
 
         std::string word;
-        std::cout << "[Step 1] Collecting candidate tokens for LLM-focused segmentation..." << std::endl;
+        std::cout << "[Step 1] Collecting candidate tokens (Character-Level Logic)..." << std::endl;
         
         while (file >> word) {
             std::string fixed_word = "_" + word;
@@ -57,7 +70,7 @@ public:
         }
         file.close();
 
-        std::cout << "[Step 2] Scoring tokens with Information Gain & Length Penalty..." << std::endl;
+        std::cout << "[Step 2] Scoring tokens with True UTF-8 Character Length Penalty..." << std::endl;
         std::unordered_map<std::string, double> vocab_loss;
         
         using TokenPair = std::pair<double, std::string>;
@@ -67,18 +80,20 @@ public:
             double probability = (double)count / total_token_count;
             double entropy = -std::log2(probability);
             
+            size_t char_len = get_utf8_char_count(token);
             double score = entropy;
-            if (token.rfind("_", 0) == 0) {
-                if (token.length() > 15) {
-                    score += 4.0;
-                } else if (token.length() > 6) {
-                    score -= 1.5;
+            
+            if (token.rfind("_", 0) == 0) { 
+                if (char_len > 10) {        
+                    score += 5.0;
+                } else if (char_len > 3) {  
+                    score -= 2.5;           
                 }
-            } else {
-                if (token.length() <= 6) {
-                    score -= 2.0;
+            } else {                        
+                if (char_len <= 4) {        
+                    score -= 2.0;           
                 } else {
-                    score += 3.0;
+                    score += 4.0;           
                 }
             }
 
@@ -87,8 +102,7 @@ public:
             pq.push({score, token}); 
         }
 
-        std::cout << "[Step 3] Pruning vocabulary for optimal LLM token boundary..." << std::endl;
-        
+        std::cout << "[Step 3] Pruning vocabulary..." << std::endl;
         while (vocab_counts.size() > (size_t)vocab_size && !pq.empty()) {
             TokenPair top_node = pq.top();
             std::string worst_token = top_node.second;
@@ -100,7 +114,7 @@ public:
             }
         }
 
-        std::cout << "[Step 4] Training complete. Saved final " << vocab_size << " LLM tokens." << std::endl;
+        std::cout << "[Step 4] Training complete. Saved final " << vocab_size << " optimized tokens." << std::endl;
         save_to_json(vocab_counts);
     }
 
