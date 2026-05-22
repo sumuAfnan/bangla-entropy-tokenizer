@@ -56,11 +56,21 @@ public:
 
     std::vector<std::string> encode(const std::string& text) {
         std::string normalized = "";
+        bool last_was_space = true; 
+
         for (size_t i = 0; i < text.length(); ++i) {
             if (text[i] == ' ') {
-                normalized += "_";
+                if (!last_was_space) {
+                    normalized += "_";
+                    last_was_space = true;
+                }
             } else {
-                if (i == 0) normalized += "_";
+                if (last_was_space) {
+                    if (normalized.empty() || normalized.back() != '_') {
+                        normalized += "_";
+                    }
+                    last_was_space = false;
+                }
                 normalized += text[i];
             }
         }
