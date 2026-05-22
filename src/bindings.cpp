@@ -58,7 +58,7 @@ public:
         std::string normalized = "";
         for (size_t i = 0; i < text.length(); ++i) {
             if (text[i] == ' ') {
-                normalized += " _";
+                normalized += "_";
             } else {
                 if (i == 0) normalized += "_";
                 normalized += text[i];
