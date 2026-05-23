@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <vector>
+#include <string>
 #include "tokenizer_engine.cpp"
 
 namespace py = pybind11;
@@ -75,29 +77,52 @@ public:
             }
         }
 
-        std::vector<std::string> final_tokens;
-        size_t i = 0;
-        while (i < normalized.length()) {
-            bool matched = false;
+        size_t n = normalized.length();
+        std::vector<int> dp(n + 1, 1e9); 
+        std::vector<int> parent(n + 1, -1);
+        std::vector<std::string> matched_token(n + 1, "");
+
+        dp[0] = 0;
+
+        for (size_t i = 0; i < n; ++i) {
+            if (dp[i] == 1e9) continue;
+
+            bool any_match = false;
             for (const auto& token : tokens_sorted) {
-                if (normalized.compare(i, token.length(), token) == 0) {
-                    final_tokens.push_back(token);
-                    i += token.length();
-                    matched = true;
-                    break;
+                size_t len = token.length();
+                if (i + len <= n && normalized.compare(i, len, token) == 0) {
+                    any_match = true;
+                    if (dp[i] + 1 < dp[i + len]) {
+                        dp[i + len] = dp[i] + 1;
+                        parent[i + len] = i;
+                        matched_token[i + len] = token;
+                    }
                 }
             }
-            if (!matched) {
+
+            if (!any_match || true) { 
                 size_t len = 1;
                 unsigned char c = normalized[i];
                 if (c >= 0xf0) len = 4;
                 else if (c >= 0xe0) len = 3;
                 else if (c >= 0xc0) len = 2;
-                
-                final_tokens.push_back(normalized.substr(i, len));
-                i += len;
+
+                if (i + len <= n && dp[i] + 1 < dp[i + len]) {
+                    dp[i + len] = dp[i] + 1;
+                    parent[i + len] = i;
+                    matched_token[i + len] = normalized.substr(i, len);
+                }
             }
         }
+
+        std::vector<std::string> final_tokens;
+        int curr = n;
+        while (curr > 0 && parent[curr] != -1) {
+            final_tokens.push_back(matched_token[curr]);
+            curr = parent[curr];
+        }
+        std::reverse(final_tokens.begin(), final_tokens.end());
+
         return final_tokens;
     }
 };
